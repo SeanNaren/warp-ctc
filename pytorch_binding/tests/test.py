@@ -12,6 +12,7 @@ places = 5
 
 use_cuda = torch.cuda.is_available()
 
+
 def run_grads(label_sizes, labels, probs, sizes):
     probs = Variable(probs, requires_grad=True)
     cost = ctc_loss(probs, labels, sizes, label_sizes)
@@ -24,9 +25,9 @@ def run_grads(label_sizes, labels, probs, sizes):
         gpu_cost = cost.data[0]
     else:
         gpu_cost = cpu_cost
-    grads = probs.grad
+    grads = probs.grad * probs.grad.size(1)
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
-    return cpu_cost, gpu_cost
+    return cpu_cost * probs.size(1), gpu_cost * probs.size(1)
 
 
 class TestCases(unittest.TestCase):
