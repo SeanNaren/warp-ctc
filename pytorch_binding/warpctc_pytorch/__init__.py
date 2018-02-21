@@ -36,8 +36,9 @@ class _CTC(Function):
                   act_lens,
                   minibatch_size,
                   costs)
-        costs = torch.FloatTensor([costs.sum()])
+        costs = torch.FloatTensor([costs.sum()]) / acts.size(1)
         ctx.grads = Variable(grads)
+        ctx.grads /= ctx.grads.size(1)
         return costs
 
     @staticmethod
