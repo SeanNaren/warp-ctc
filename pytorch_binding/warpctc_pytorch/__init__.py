@@ -3,20 +3,8 @@ import warpctc_pytorch as warp_ctc
 from torch.autograd import Function
 from torch.nn import Module
 from torch.nn.modules.loss import _assert_no_grad
-from torch.utils.ffi import _wrap_function
-from ._warp_ctc import lib as _lib, ffi as _ffi
 
-__all__ = []
-
-
-def _import_symbols(locals):
-    for symbol in dir(_lib):
-        fn = getattr(_lib, symbol)
-        locals[symbol] = _wrap_function(fn, _ffi)
-        __all__.append(symbol)
-
-
-_import_symbols(locals())
+from ._warp_ctc import *
 
 
 class _CTC(Function):
@@ -53,7 +41,7 @@ class CTCLoss(Module):
         act_lens: Tensor of size (batch) containing size of each output sequence from the network
         act_lens: Tensor of (batch) containing label length of each example
         """
-        assert len(labels.size()) == 1 # labels must be 1 dimensional
+        assert len(labels.size()) == 1  # labels must be 1 dimensional
         _assert_no_grad(labels)
         _assert_no_grad(act_lens)
         _assert_no_grad(label_lens)
