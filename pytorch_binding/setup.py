@@ -2,7 +2,7 @@
 import os
 import platform
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 
 from torch.utils.ffi import create_extension
 
@@ -59,6 +59,6 @@ setup(
     author="Jared Casper, Sean Naren",
     author_email="jared.casper@baidu.com, sean.narenthiran@digitalreasoning.com",
     license="Apache",
-    packages=["warpctc_pytorch"],
+    packages=find_packages(),
     ext_modules=[ffi],
 )
