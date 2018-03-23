@@ -6,7 +6,13 @@ from setuptools import setup, find_packages
 
 from torch.utils.ffi import create_extension
 
-extra_compile_args = ['-std=c++11', '-fPIC']
+if sys.platform == 'darwin':
+    extra_compile_args = ['--stdlib=libc++']
+else:
+    extra_compile_args = ['-std=c++']
+
+extra_compile_args += ['-fPIC']
+
 warp_ctc_path = "../build"
 
 if "CUDA_HOME" not in os.environ:
