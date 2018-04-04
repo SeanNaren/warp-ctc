@@ -66,7 +66,7 @@ class CTCLoss(Module):
         acts: Tensor of (seqLength x batch x outputDim) containing output from network
         labels: 1 dimensional Tensor containing all the targets of the batch in one sequence
         act_lens: Tensor of size (batch) containing size of each output sequence from the network
-        act_lens: Tensor of (batch) containing label length of each example
+        label_lens: Tensor of (batch) containing label length of each example
         """
         assert len(labels.size()) == 1  # labels must be 1 dimensional
         _assert_no_grad(labels)

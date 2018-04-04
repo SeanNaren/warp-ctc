@@ -100,31 +100,6 @@ IF (WITH_GPU)
             ARCHIVE DESTINATION "lib")
 
     INSTALL(FILES include/ctc.h DESTINATION "include")
-
-    IF (Torch_FOUND)
-        MESSAGE(STATUS "Building Torch Bindings with GPU support")
-        INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS} "${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc")
-        INCLUDE_DIRECTORIES(${Torch_INSTALL_INCLUDE} ${Torch_INSTALL_INCLUDE}/TH ${Torch_INSTALL_INCLUDE}/THC)
-
-        TARGET_LINK_LIBRARIES(warpctc luajit luaT THC TH ${CUDA_curand_LIBRARY})
-        INSTALL(TARGETS warpctc
-                RUNTIME DESTINATION "${Torch_INSTALL_BIN_SUBDIR}"
-                LIBRARY DESTINATION "${Torch_INSTALL_LIB_SUBDIR}"
-                ARCHIVE DESTINATION "${Torch_INSTALL_LIB_SUBDIR}")
-
-        SET(src torch_binding/binding.cpp torch_binding/utils.c)
-        SET(luasrc torch_binding/init.lua)
-
-        ADD_TORCH_PACKAGE(warp_ctc "${src}" "${luasrc}")
-        IF (APPLE)
-
-            TARGET_LINK_LIBRARIES(warp_ctc warpctc luajit luaT THC TH ${CUDA_curand_LIBRARY})
-        ELSE()
-            TARGET_LINK_LIBRARIES(warp_ctc warpctc luajit luaT THC TH ${CUDA_curand_LIBRARY} gomp)
-        ENDIF()
-    ENDIF()
-
-
 ELSE()
     MESSAGE(STATUS "Building shared library with no GPU support")
 
@@ -144,28 +119,4 @@ ELSE()
             ARCHIVE DESTINATION "lib")
 
     INSTALL(FILES include/ctc.h DESTINATION "include")
-
-    IF (Torch_FOUND)
-        MESSAGE(STATUS "Building Torch Bindings with no GPU support")
-        add_definitions(-DTORCH_NOGPU)
-        INCLUDE_DIRECTORIES(${Torch_INSTALL_INCLUDE} ${Torch_INSTALL_INCLUDE}/TH)
-
-        TARGET_LINK_LIBRARIES(warpctc luajit luaT TH)
-
-        INSTALL(TARGETS warpctc
-                RUNTIME DESTINATION "${Torch_INSTALL_BIN_SUBDIR}"
-                LIBRARY DESTINATION "${Torch_INSTALL_LIB_SUBDIR}"
-                ARCHIVE DESTINATION "${Torch_INSTALL_LIB_SUBDIR}")
-
-        SET(src torch_binding/binding.cpp torch_binding/utils.c)
-        SET(luasrc torch_binding/init.lua)
-
-        ADD_TORCH_PACKAGE(warp_ctc "${src}" "${luasrc}")
-        IF (APPLE)
-            TARGET_LINK_LIBRARIES(warp_ctc warpctc luajit luaT TH)
-        ELSE()
-            TARGET_LINK_LIBRARIES(warp_ctc warpctc luajit luaT TH gomp)
-        ENDIF()
-    ENDIF()
-
 ENDIF()
