@@ -1,8 +1,9 @@
 import torch
 import warpctc_pytorch as warp_ctc
+import pytest
 
 
-def simple_test():
+def test_simple():
     probs = torch.FloatTensor([[[0.1, 0.6, 0.1, 0.1, 0.1], [0.1, 0.1, 0.6, 0.1, 0.1]]]).transpose(0, 1).contiguous()
     grads = torch.zeros(probs.size())
     labels = torch.IntTensor([1, 2])
@@ -31,8 +32,8 @@ def simple_test():
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
 
-
-def medium_test(multiplier):
+@pytest.mark.parametrize("multiplier", [1.0, 200.0])
+def test_medium(multiplier):
     probs = torch.FloatTensor([
         [[0.1, 0.6, 0.1, 0.1, 0.1], [0.1, 0.1, 0.6, 0.1, 0.1]],
         [[0.6, 0.1, 0.1, 0.1, 0.1], [0.1, 0.1, 0.5, 0.2, 0.1]]
@@ -66,7 +67,7 @@ def medium_test(multiplier):
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
 
 
-def empty_label_test():
+def test_empty_label():
     probs = torch.FloatTensor([
         [[0.1, 0.6, 0.1, 0.1, 0.1], [0.1, 0.1, 0.6, 0.1, 0.1]],
         [[0.6, 0.1, 0.1, 0.1, 0.1], [0.1, 0.1, 0.5, 0.2, 0.1]]
@@ -99,9 +100,5 @@ def empty_label_test():
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
 
-simple_test()
-medium_test(1.0)
-print("Stability test")
-medium_test(200.0)  # test SM stability if compiled with USE_NSM this will not have nans
-print("Empty label test")
-empty_label_test()
+if __name__=='__main__':
+    pytest.main([__file__])

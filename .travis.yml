@@ -1,0 +1,40 @@
+sudo: required
+dist: trusty
+language: python
+matrix:
+    include:
+        - python: 2.7
+          env: TEST_MODE=PEP8
+        - python: 2.7
+        - python: 3.6
+install: make get-deps
+  ## Start conda installation
+  # https://conda.io/docs/user-guide/tasks/use-conda-with-travis-ci.html
+  - sudo apt-get update
+  # We do this conditionally because it saves us some downloading if the
+  # version is the same.
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+  ## End conda installation
+  
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytorch pytest pytest-pep8
+  - source activate test-environment
+  - mkdir build && cd build && cmake .. && make && sudo make install && sudo ldconfig
+  - cd pytorch_binding && python setup.py install  
+
+script:
+  - if [[ "$TEST_MODE" == "PEP8" ]]; then
+      PYTHONPATH=$PWD:$PYTHONPATH cd pytorch_binding && py.test --pep8 -m pep8 -n0;
+    elif [[ "$TEST_MODE" == "DOC" ]]; then
+      PYTHONPATH=$PWD:$PYTHONPATH cd pytorch_binding && py.test tests;
+    fi
