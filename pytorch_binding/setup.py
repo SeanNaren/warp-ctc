@@ -5,18 +5,16 @@ import sys
 from setuptools import setup, find_packages
 
 from torch.utils.ffi import create_extension
+import torch
 
 extra_compile_args = ['-std=c++11', '-fPIC']
 warp_ctc_path = "../build"
 
-if "CUDA_HOME" not in os.environ:
-    print("CUDA_HOME not found in the environment so building "
-          "without GPU support. To build with GPU support "
-          "please define the CUDA_HOME environment variable. "
-          "This should be a path which contains include/cuda.h")
-    enable_gpu = False
-else:
+if torch.cuda.is_available():
     enable_gpu = True
+else:
+    print("Torch was not built with CUDA support, not building warp-ctc GPU extensions.")
+    enable_gpu = False
 
 if platform.system() == 'Darwin':
     lib_ext = ".dylib"
