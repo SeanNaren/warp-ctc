@@ -38,7 +38,7 @@ class _CTC(Function):
             grads = grads / minibatch_size
             costs = costs / minibatch_size
 
-        ctx.grads = Variable(grads)
+        ctx.grads = Variable(grads, volatile=True)
         return costs
 
     @staticmethod
