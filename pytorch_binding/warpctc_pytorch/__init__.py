@@ -12,11 +12,17 @@ class _CTC(Function):
     @staticmethod
     def forward(ctx, acts, labels, act_lens, label_lens, size_average=False,
                 length_average=False):
+        # with torch.no_grad():
+
         is_cuda = True if acts.is_cuda else False
         acts = acts.contiguous()
         loss_func = warp_ctc.gpu_ctc if is_cuda else warp_ctc.cpu_ctc
         grads = torch.zeros(acts.size()).type_as(acts)
         minibatch_size = acts.size(1)
+
+        # Output for debugging
+        # print("_CTC forward function: minibatch size: " + str(minibatch_size))
+
         costs = torch.zeros(minibatch_size).cpu()
         loss_func(acts,
                   grads,
@@ -25,6 +31,9 @@ class _CTC(Function):
                   act_lens,
                   minibatch_size,
                   costs)
+
+        # Output for debugging
+        # print("_CTC forward function: costs before summation: " + str(costs))
 
         costs = torch.FloatTensor([costs.sum()])
 
@@ -38,7 +47,12 @@ class _CTC(Function):
             grads = grads / minibatch_size
             costs = costs / minibatch_size
 
-        ctx.grads = Variable(grads, volatile=True)
+            ctx.grads = Variable(grads, volatile=True)
+
+            # Debugging output
+            # print(">>>  ctx.grads: " + str(ctx.grads))
+            # print(">>>  ctx.grads.requires_grad: " + str(ctx.grads.requires_grad))
+
         return costs
 
     @staticmethod
@@ -68,7 +82,26 @@ class CTCLoss(Module):
         act_lens: Tensor of size (batch) containing size of each output sequence from the network
         label_lens: Tensor of (batch) containing label length of each example
         """
-        assert len(labels.size()) == 1  # labels must be 1 dimensional
+
+        print("labels.size()" + str(labels.size()))
+        if not len(labels.size()) == 1:
+            raise RuntimeError("Error: the labels must be one dimensional and contain\n" +
+                               "all label sequences in the examples of the batch concatenated." +
+                               "\nBut got however labels.size(): " + str(labels.size()) + "\n" +
+                               "which is not the right usage.")
+        #assert len(labels.size()) == 1  # labels must be 1 dimensional
+
+        sum_label_lens = torch.sum(label_lens)
+        # label_lens contains the lengths of the label sequences (sub-ranges)
+        # that are concatenated together in labels. Hence the sum of label_lens
+        # should be the length of labels
+        if not sum_label_lens == len(labels):
+            raise RuntimeError("Error: length of labels is: " + str(len(labels)) +
+                               " but sum of label lengths in " + str(labels) +
+                               " is " + str(sum_label_lens) + "." +
+                               "\nPlease make sure the label lengths" +
+                               " add up to the number of labels")
+
         _assert_no_grad(labels)
         _assert_no_grad(act_lens)
         _assert_no_grad(label_lens)
