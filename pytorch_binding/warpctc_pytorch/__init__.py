@@ -1,7 +1,6 @@
 import torch
 import warpctc_pytorch as warp_ctc
 from torch.autograd import Function
-from torch.autograd import Variable
 from torch.nn import Module
 from torch.nn.modules.loss import _assert_no_grad
 
@@ -38,7 +37,7 @@ class _CTC(Function):
             grads = grads / minibatch_size
             costs = costs / minibatch_size
 
-        ctx.grads = Variable(grads, volatile=True)
+        ctx.grads = grads
         return costs
 
     @staticmethod
