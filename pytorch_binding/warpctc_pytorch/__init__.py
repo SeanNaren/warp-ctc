@@ -29,7 +29,7 @@ class _CTC(Function):
 
         if length_average:
             # Compute the avg. log-probability per batch sample and frame.
-            total_length = torch.sum(act_lens)
+            total_length = torch.sum(act_lens).item()
             grads = grads / total_length
             costs = costs / total_length
         elif size_average:
