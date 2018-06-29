@@ -14,22 +14,18 @@ def _assert_no_grad(tensor):
 
 class _CTC(Function):
     @staticmethod
-    def forward(ctx, acts, labels, act_lens, label_lens, size_average=False,
+    def forward(ctx, acts, labels, act_lens, label_lens, blank_label=0, num_threads=0, size_average=False,
                 length_average=False):
         is_cuda = True if acts.is_cuda else False
         acts = acts.contiguous()
-        loss_func = warp_ctc.gpu_ctc if is_cuda else warp_ctc.cpu_ctc
         grads = torch.zeros(acts.size()).type_as(acts)
         minibatch_size = acts.size(1)
         costs = torch.zeros(minibatch_size).cpu()
-        loss_func(acts,
-                  grads,
-                  labels,
-                  label_lens,
-                  act_lens,
-                  minibatch_size,
-                  costs)
-
+        if is_cuda:
+            # num_threads will be negeleted in GPU mode
+            warp_ctc.gpu_ctc(acts, grads,labels, label_lens, act_lens, minibatch_size, blank_label, costs)
+        else:
+            warp_ctc.cpu_ctc(acts, grads,labels, label_lens, act_lens, minibatch_size, blank_label, num_threads, costs)
         costs = torch.FloatTensor([costs.sum()])
 
         if length_average:

@@ -18,6 +18,8 @@ def test_simple():
                      label_sizes,
                      sizes,
                      minibatch_size,
+                     0,
+                     0,
                      costs)
     print('CPU_cost: %f' % costs.sum())
     probs = probs.clone().cuda()
@@ -29,6 +31,7 @@ def test_simple():
                      label_sizes,
                      sizes,
                      minibatch_size,
+                     0,
                      costs)
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
@@ -54,6 +57,8 @@ def test_medium(multiplier):
                      label_sizes,
                      sizes,
                      minibatch_size,
+                     0,
+                     0,
                      costs)
     print('CPU_cost: %f' % costs.sum())
     probs = probs.clone().cuda()
@@ -65,6 +70,7 @@ def test_medium(multiplier):
                      label_sizes,
                      sizes,
                      minibatch_size,
+                     0,
                      costs)
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
@@ -89,6 +95,8 @@ def test_empty_label():
                      label_sizes,
                      sizes,
                      minibatch_size,
+                     0,
+                     0,
                      costs)
     print('CPU_cost: %f' % costs.sum())
     probs = probs.clone().cuda()
@@ -100,6 +108,7 @@ def test_empty_label():
                      label_sizes,
                      sizes,
                      minibatch_size,
+                     0,
                      costs)
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
