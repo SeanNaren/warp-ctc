@@ -2,9 +2,14 @@ import torch
 import warpctc_pytorch as warp_ctc
 from torch.autograd import Function
 from torch.nn import Module
-from torch.nn.modules.loss import _assert_no_grad
 
 from ._warp_ctc import *
+
+
+def _assert_no_grad(tensor):
+    assert not tensor.requires_grad, \
+        "gradients only computed for acts - please " \
+        "mark other tensors as not requiring gradients"
 
 
 class _CTC(Function):
