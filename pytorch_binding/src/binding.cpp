@@ -20,7 +20,8 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
                         THIntTensor *label_sizes,
                         THIntTensor *sizes,
                         int minibatch_size,
-                        THFloatTensor *costs) {
+                        THFloatTensor *costs,
+                        int blank_label) {
 
     float *probs_ptr = probs->storage->data + probs->storageOffset;
     float *grads_ptr;
@@ -39,6 +40,7 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
     memset(&options, 0, sizeof(options));
     options.loc = CTC_CPU;
     options.num_threads = 0; // will use default number of threads
+    options.blank_label = blank_label;
 
 #if defined(CTC_DISABLE_OMP) || defined(APPLE)
     // have to use at least one
@@ -68,7 +70,8 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
                            THIntTensor *label_sizes,
                            THIntTensor *sizes,
                            int minibatch_size,
-                           THFloatTensor *costs) {
+                           THFloatTensor *costs,
+                           int blank_label) {
 
        float *probs_ptr = probs->storage->data + probs->storageOffset;
        float *grads_ptr;
@@ -86,6 +89,7 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
        ctcOptions options;
        memset(&options, 0, sizeof(options));
        options.loc = CTC_GPU;
+       options.blank_label = blank_label;
        options.stream = THCState_getCurrentStream(state);
 
        size_t gpu_size_bytes;
