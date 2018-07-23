@@ -22,18 +22,18 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
                         int minibatch_size,
                         THFloatTensor *costs) {
 
-    float *probs_ptr = probs->storage->data + probs->storageOffset;
+    float *probs_ptr = THFloatTensor_data(probs);
     float *grads_ptr;
-    if (grads->storage) {
-            grads_ptr = grads->storage->data + grads->storageOffset;
+    if (THFloatTensor_storage(grads)) {
+            grads_ptr = THFloatTensor_data(grads);
     } else {
             grads_ptr = NULL; // this will trigger the score forward code path
     }
 
-    int *sizes_ptr = sizes->storage->data + sizes->storageOffset;
-    int *labels_ptr = labels->storage->data + labels->storageOffset;
-    int *label_sizes_ptr = label_sizes->storage->data + label_sizes->storageOffset;
-    float *costs_ptr = costs->storage->data + costs->storageOffset;
+    int *sizes_ptr = THIntTensor_data(sizes);
+    int *labels_ptr = THIntTensor_data(labels);
+    int *label_sizes_ptr = THIntTensor_data(label_sizes);
+    float *costs_ptr = THFloatTensor_data(costs);
 
     ctcOptions options;
     memset(&options, 0, sizeof(options));
@@ -46,21 +46,23 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
 #endif
 
     size_t cpu_size_bytes;
+    int probs_size = THFloatTensor_size(probs, 2);
     get_workspace_size(label_sizes_ptr, sizes_ptr,
-                       (int) probs->size[2], minibatch_size,
+                       probs_size, minibatch_size,
                        options, &cpu_size_bytes);
 
     float* cpu_workspace = (float*) new unsigned char[cpu_size_bytes];
 
     compute_ctc_loss(probs_ptr, grads_ptr,
                      labels_ptr, label_sizes_ptr,
-                     sizes_ptr, probs->size[2],
+                     sizes_ptr, probs_size,
                      minibatch_size, costs_ptr,
                      cpu_workspace, options);
 
     delete cpu_workspace;
     return 1;
 }
+
 #ifdef WARPCTC_ENABLE_GPU
    extern "C" int gpu_ctc(THCudaTensor *probs,
                            THCudaTensor *grads,
@@ -70,18 +72,18 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
                            int minibatch_size,
                            THFloatTensor *costs) {
 
-       float *probs_ptr = probs->storage->data + probs->storageOffset;
+       float *probs_ptr = THCudaTensor_data(state, probs);
        float *grads_ptr;
-       if (grads->storage) {
-               grads_ptr = grads->storage->data + grads->storageOffset;
+       if (THCudaTensor_storage(state, grads)) {
+               grads_ptr = THCudaTensor_data(state, grads);
        } else {
                grads_ptr = NULL; // this will trigger the score forward code path
        }
 
-       int *sizes_ptr = sizes->storage->data + sizes->storageOffset;
-       int *labels_ptr = labels->storage->data + labels->storageOffset;
-       int *label_sizes_ptr = label_sizes->storage->data + label_sizes->storageOffset;
-       float *costs_ptr = costs->storage->data + costs->storageOffset;
+       int *sizes_ptr = THIntTensor_data(sizes);
+       int *labels_ptr = THIntTensor_data(labels);
+       int *label_sizes_ptr = THIntTensor_data(label_sizes);
+       float *costs_ptr = THFloatTensor_data(costs);
 
        ctcOptions options;
        memset(&options, 0, sizeof(options));
@@ -89,8 +91,9 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
        options.stream = THCState_getCurrentStream(state);
 
        size_t gpu_size_bytes;
+       int probs_size = THCudaTensor_size(state, probs, 2);
        get_workspace_size(label_sizes_ptr, sizes_ptr,
-                          (int) probs->size[2], minibatch_size,
+                          probs_size, minibatch_size,
                           options, &gpu_size_bytes);
 
        float* gpu_workspace;
@@ -98,7 +101,7 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
 
        compute_ctc_loss(probs_ptr, grads_ptr,
                         labels_ptr, label_sizes_ptr,
-                        sizes_ptr, probs->size[2],
+                        sizes_ptr, probs_size,
                         minibatch_size, costs_ptr,
                         gpu_workspace, options);
 
