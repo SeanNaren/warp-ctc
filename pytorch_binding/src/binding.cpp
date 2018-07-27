@@ -54,7 +54,7 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
                        probs_size, minibatch_size,
                        options, &cpu_size_bytes);
 
-    float* cpu_workspace = (float*) new unsigned char[cpu_size_bytes];
+    float* cpu_workspace = new float[cpu_size_bytes / sizeof(float)];
 
     compute_ctc_loss(probs_ptr, grads_ptr,
                      labels_ptr, label_sizes_ptr,
@@ -62,7 +62,7 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
                      minibatch_size, costs_ptr,
                      cpu_workspace, options);
 
-    delete cpu_workspace;
+    delete[] cpu_workspace;
     return 1;
 }
 
