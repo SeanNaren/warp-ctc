@@ -12,42 +12,51 @@ class _CTC(Function):
     @staticmethod
     def forward(ctx, acts, labels, act_lens, label_lens, size_average=False,
                 length_average=False):
-        # with torch.no_grad():
+        with torch.no_grad():
 
-        is_cuda = True if acts.is_cuda else False
-        acts = acts.contiguous()
-        loss_func = warp_ctc.gpu_ctc if is_cuda else warp_ctc.cpu_ctc
-        grads = torch.zeros(acts.size()).type_as(acts)
-        minibatch_size = acts.size(1)
+            is_cuda = True if acts.is_cuda else False
+            acts = acts.contiguous()
+            loss_func = warp_ctc.gpu_ctc if is_cuda else warp_ctc.cpu_ctc
+            grads = torch.zeros(acts.size()).type_as(acts)
+            minibatch_size = acts.size(1)
 
-        # Output for debugging
-        # print("_CTC forward function: minibatch size: " + str(minibatch_size))
+            # Output for debugging
+            # print("_CTC forward function: minibatch size: " + str(minibatch_size))
 
-        costs = torch.zeros(minibatch_size).cpu()
-        loss_func(acts,
-                  grads,
-                  labels,
-                  label_lens,
-                  act_lens,
-                  minibatch_size,
-                  costs)
+            costs = torch.zeros(minibatch_size).cpu()
+            loss_func(acts,
+                      grads,
+                      labels,
+                      label_lens,
+                      act_lens,
+                      minibatch_size,
+                      costs)
 
-        # Output for debugging
-        # print("_CTC forward function: costs before summation: " + str(costs))
+            # Output for debugging
+            # print("_CTC forward function: costs before summation: " + str(costs))
 
-        costs = torch.FloatTensor([costs.sum()])
+            costs = torch.FloatTensor([costs.sum()])
 
-        if length_average:
-            # Compute the avg. log-probability per batch sample and frame.
-            total_length = torch.sum(act_lens)
-            grads = grads / total_length
-            costs = costs / total_length
-        elif size_average:
-            # Compute the avg. log-probability per batch sample.
-            grads = grads / minibatch_size
-            costs = costs / minibatch_size
+            if length_average:
+                # Compute the avg. log-probability per batch sample and frame.
+                total_length = torch.sum(act_lens)
+                grads = grads / total_length
+                costs = costs / total_length
+            elif size_average:
+                # Compute the avg. log-probability per batch sample.
+                grads = grads / minibatch_size
+                costs = costs / minibatch_size
 
-            ctx.grads = Variable(grads, volatile=True)
+            # Replaced with " torch.no_grad()" around the whole function body
+            # The goal was to not track the computation with autograd appearantly.
+            # https://stackoverflow.com/questions/49837638/what-is-volatile-variable-in-pytorch
+            # This is now done differently
+            # https://pytorch.org/2018/04/22/0_4_0-migration-guide.html
+            # See: https://discuss.pytorch.org/t/torch-no-grad/12296
+            # https://github.com/SeanNaren/deepspeech.pytorch/issues/277
+            # https://discuss.pytorch.org/t/why-volatility-changed-after-operation-parameter-parameter-0-01-parameter-grad/11639
+            # ctx.grads = Variable(grads, volatile=True)
+            ctx.grads = grads
 
             # Debugging output
             # print(">>>  ctx.grads: " + str(ctx.grads))
@@ -83,7 +92,7 @@ class CTCLoss(Module):
         label_lens: Tensor of (batch) containing label length of each example
         """
 
-        print("labels.size()" + str(labels.size()))
+        # print("labels.size()" + str(labels.size()))
         if not len(labels.size()) == 1:
             raise RuntimeError("Error: the labels must be one dimensional and contain\n" +
                                "all label sequences in the examples of the batch concatenated." +
