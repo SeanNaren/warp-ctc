@@ -3,40 +3,36 @@
 
 #include <numeric>
 
-#include "ctc.h"
+#include <torch/extension.h>
 
 #ifdef WARPCTC_ENABLE_GPU
+	#include "ATen/cuda/CUDAContext.h"
+	#include "ATen/cuda/CUDAGuard.h"
+	#include "ATen/cuda/CUDAEvent.h"
+
     #include "THC.h"
-    #include "THCTensor.h"
-    #include "detail/reduce.h"
     extern THCState* state;
-#else
-    #include "TH.h"
 #endif
 
-extern "C" int cpu_ctc(THFloatTensor *probs,
-                       THFloatTensor *grads,
-                       THIntTensor *labels,
-                       THIntTensor *label_sizes,
-                       THIntTensor *sizes,
-                       int minibatch_size,
-                       THFloatTensor *costs,
-                       int blank_label)
+#include "ctc.h"
+
+int cpu_ctc(torch::Tensor probs,
+            torch::Tensor grads,
+            torch::Tensor labels,
+            torch::Tensor label_sizes,
+            torch::Tensor sizes,
+            int minibatch_size,
+            torch::Tensor costs,
+            int blank_label)
 {
-    float *probs_ptr = THFloatTensor_data(probs);
-    float *grads_ptr;
-    if (THFloatTensor_storage(grads)) {
-        grads_ptr = THFloatTensor_data(grads);
-    } else {
-        grads_ptr = NULL; // this will trigger the score forward code path
-    }
+    float* probs_ptr       = (float*)probs.data_ptr();
+    float* grads_ptr       = grads.storage() ? (float*)grads.data_ptr() : NULL;
+    int*   sizes_ptr       = (int*)sizes.data_ptr();
+    int*   labels_ptr      = (int*)labels.data_ptr();
+    int*   label_sizes_ptr = (int*)label_sizes.data_ptr();
+    float* costs_ptr       = (float*)costs.data_ptr();
 
-    int *sizes_ptr = THIntTensor_data(sizes);
-    int *labels_ptr = THIntTensor_data(labels);
-    int *label_sizes_ptr = THIntTensor_data(label_sizes);
-    float *costs_ptr = THFloatTensor_data(costs);
-
-    int probs_size = THFloatTensor_size(probs, 2);
+    const int probs_size = probs.size(2);
 
     ctcOptions options;
     memset(&options, 0, sizeof(options));
@@ -67,35 +63,29 @@ extern "C" int cpu_ctc(THFloatTensor *probs,
 }
 
 #ifdef WARPCTC_ENABLE_GPU
-extern "C" int gpu_ctc(THCudaTensor *probs,
-                       THCudaTensor *grads,
-                       THIntTensor *labels,
-                       THIntTensor *label_sizes,
-                       THIntTensor *sizes,
-                       int minibatch_size,
-                       THFloatTensor *costs,
-                       int blank_label)
+int gpu_ctc(torch::Tensor probs,
+            torch::Tensor grads,
+            torch::Tensor labels,
+            torch::Tensor label_sizes,
+            torch::Tensor sizes,
+            int minibatch_size,
+            torch::Tensor costs,
+            int blank_label)
 {
-    float *probs_ptr = THCudaTensor_data(state, probs);
-    float *grads_ptr;
-    if (THCudaTensor_storage(state, grads)) {
-        grads_ptr = THCudaTensor_data(state, grads);
-    } else {
-        grads_ptr = NULL; // this will trigger the score forward code path
-    }
+    float* probs_ptr       = (float*)probs.data_ptr();
+    float* grads_ptr       = grads.storage() ? (float*)grads.data_ptr() : NULL;
+    int*   sizes_ptr       = (int*)sizes.data_ptr();
+    int*   labels_ptr      = (int*)labels.data_ptr();
+    int*   label_sizes_ptr = (int*)label_sizes.data_ptr();
+    float* costs_ptr       = (float*)costs.data_ptr();
 
-    int *sizes_ptr = THIntTensor_data(sizes);
-    int *labels_ptr = THIntTensor_data(labels);
-    int *label_sizes_ptr = THIntTensor_data(label_sizes);
-    float *costs_ptr = THFloatTensor_data(costs);
-
-    int probs_size = THFloatTensor_size(probs, 2);
+    const int probs_size = probs.size(2);
 
     ctcOptions options;
     memset(&options, 0, sizeof(options));
     options.loc = CTC_GPU;
     options.blank_label = blank_label;
-    options.stream = THCState_getCurrentStream(state);
+    options.stream = at::cuda::getCurrentCUDAStream();
 
     size_t gpu_size_bytes;
     get_workspace_size(label_sizes_ptr, sizes_ptr,
@@ -114,3 +104,10 @@ extern "C" int gpu_ctc(THCudaTensor *probs,
     return 1;
 }
 #endif
+
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  m.def("cpu_ctc", &cpu_ctc, "CTC Loss function with cpu");
+#ifdef WARPCTC_ENABLE_GPU
+  m.def("gpu_ctc", &gpu_ctc, "CTC Loss function with gpu");
+#endif
+}
