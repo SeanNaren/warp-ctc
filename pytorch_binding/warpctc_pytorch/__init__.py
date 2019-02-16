@@ -48,7 +48,7 @@ class _CTC(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        return ctx.grads, None, None, None, None, None, None
+        return ctx.grads, None, None, None, None, None, None, None
 
 
 class CTCLoss(Module):
