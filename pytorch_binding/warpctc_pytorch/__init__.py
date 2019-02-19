@@ -14,16 +14,18 @@ def _assert_no_grad(tensor):
 
 class _CTC(Function):
     @staticmethod
-    def forward(ctx, acts, labels, act_lens, label_lens, grads, size_average=False,
+    def forward(ctx, acts, labels, act_lens, label_lens, size_average=False,
                 length_average=False, blank=0):
         is_cuda = True if acts.is_cuda else False
         acts = acts.contiguous()
+        acts_size = acts.size()
         loss_func = warp_ctc.gpu_ctc if is_cuda else warp_ctc.cpu_ctc
-#        grads = torch.zeros(acts.size()).type_as(acts)
         minibatch_size = acts.size(1)
         costs = torch.zeros(minibatch_size).cpu()
         loss_func(acts,
-                  grads,
+                  self.grad_tensor[:acts.size(0),
+                                   :acts.size(1),
+                                   :],
                   labels,
                   label_lens,
                   act_lens,
@@ -60,14 +62,16 @@ class CTCLoss(Module):
             in the batch. If `True`, supersedes `size_average`
             (default: `False`)
     """
-    def __init__(self, blank=0, size_average=False, length_average=False):
+    def __init__(self, batch_size, max_input_length, label_length,
+                 blank=0, size_average=False, length_average=False):
         super(CTCLoss, self).__init__()
         self.ctc = _CTC.apply
         self.blank = blank
         self.size_average = size_average
         self.length_average = length_average
+        self.grad_tensor = torch.zeros((max_input_length, batch_size, label_length))
 
-    def forward(self, acts, labels, act_lens, label_lens, grads):
+    def forward(self, acts, labels, act_lens, label_lens):
         """
         acts: Tensor of (seqLength x batch x outputDim) containing output from network
         labels: 1 dimensional Tensor containing all the targets of the batch in one sequence
@@ -78,5 +82,6 @@ class CTCLoss(Module):
         _assert_no_grad(labels)
         _assert_no_grad(act_lens)
         _assert_no_grad(label_lens)
-        return self.ctc(acts, labels, act_lens, label_lens, grads, self.size_average,
+        self.grad_tensor[:,:,:] = 0
+        return self.ctc(acts, labels, act_lens, label_lens, self.size_average,
                         self.length_average, self.blank)
