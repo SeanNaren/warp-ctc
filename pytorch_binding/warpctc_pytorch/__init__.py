@@ -80,8 +80,8 @@ class CTCLoss(Module):
         _assert_no_grad(labels)
         _assert_no_grad(act_lens)
         _assert_no_grad(label_lens)
-        self.grads[:,:,:] = 0
+        self.grads[:, :, :] = 0
         self.grads = self.grads.to(acts.device)
         return self.ctc(acts, labels, act_lens, label_lens,
-                        self.grads[:acts.size(0),:acts.size(1),:],
+                        self.grads[:acts.size(0), :acts.size(1), :],
                         self.size_average, self.length_average, self.blank)
