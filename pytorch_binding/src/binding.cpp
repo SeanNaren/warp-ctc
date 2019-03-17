@@ -11,7 +11,7 @@
 	#include "ATen/cuda/CUDAEvent.h"
 
     #include "THC.h"
-    extern THCState* state;
+    THCState* state = at::globalContext().lazyInitCUDA();
 #endif
 
 #include "ctc.h"

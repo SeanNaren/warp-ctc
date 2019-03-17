@@ -22,13 +22,13 @@ typedef enum {
 } ctcStatus_t;
 
 /** Returns a single integer which specifies the API version of the warpctc library */
-int get_warpctc_version();
+__declspec(dllexport) int get_warpctc_version();
 
 /** Returns a string containing a description of status that was passed in
  *  \param[in] status identifies which string should be returned
  *  \return C style string containing the text description
  *  */
-const char* ctcGetStatusString(ctcStatus_t status);
+__declspec(dllexport) const char* ctcGetStatusString(ctcStatus_t status);
 
 typedef enum {
     CTC_CPU = 0,
@@ -91,7 +91,7 @@ struct ctcOptions {
  *  \return Status information
  *
  * */
-ctcStatus_t compute_ctc_loss(const float* const activations,
+__declspec(dllexport) ctcStatus_t compute_ctc_loss(const float* const activations,
                              float* gradients,
                              const int* const flat_labels,
                              const int* const label_lengths,
@@ -120,7 +120,7 @@ ctcStatus_t compute_ctc_loss(const float* const activations,
  *
  *  \return Status information
  **/
-ctcStatus_t get_workspace_size(const int* const label_lengths,
+__declspec(dllexport) ctcStatus_t get_workspace_size(const int* const label_lengths,
                                const int* const input_lengths,
                                int alphabet_size, int minibatch,
                                ctcOptions info,

@@ -1,1 +1,1 @@
-ctc_entrypoint.cpp
+#include "ctc_entrypoint.cpp"
