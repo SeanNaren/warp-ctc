@@ -1,6 +1,4 @@
-# PyTorch bindings for Warp-ctc
-
-[![Build Status](https://travis-ci.org/SeanNaren/warp-ctc.svg?branch=pytorch_bindings)](https://travis-ci.org/SeanNaren/warp-ctc)
+# PyTorch bindings for Warp-ctc built with VS2017
 
 This is an extension onto the original repo found [here](https://github.com/baidu-research/warp-ctc).
 This is a branch for Visual Studio 2017 building, with the errors fixed while installing from pytorch_bindings branch. The installation has been successfully performed in the following environment:
