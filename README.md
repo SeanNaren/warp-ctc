@@ -1,8 +1,10 @@
 # PyTorch bindings for Warp-ctc built with VS2017
 
 This is an extension onto the original repo found [here](https://github.com/baidu-research/warp-ctc).
-This is a branch for Visual Studio 2017 building, with the errors fixed while installing from pytorch_bindings branch. The installation has been successfully performed in the following environment:
+This is a branch for Visual Studio 2017 building, with the errors fixed while installing from pytorch_bindings branch. The installation has been successfully performed in the following environments:
 >Win10 cuda10.1 anaconda3 python3.7 pytorch1.0 vs2017
+
+>Win7 cuda9.0 anaconda3 pytorch3.7 pytorch1.0 vs2015
 
 Most of our modifications follow [amberblade's](https://github.com/amberblade/warp-ctc) (It is a Windows compatible version of [SeanNaren's work](https://github.com/SeanNaren/warp-ctc), but cannot work with pytorch1.0). In case you should modify it yourself, all the necessary modifications can be viewed in the commit [fix errors in vs2017 building](https://github.com/hzli-ucas/warp-ctc/commit/a19202c399b8e40adc96739df946d3bdb26eefac). You can also refer to "Specific Modifications" for all the modifications and the error messages that would have be encountered during the installation without the modifications.
 
@@ -18,6 +20,7 @@ mkdir build
 cd build
 cmake -G "Visual Studio 15 2017 Win64" ..
 ```
+If using vs2015 instead of vs2017 for building, replace the `cmake -G "Visual Studio 15 2017 Win64" ..` with `cmake -G "Visual Studio 14 2015 Win64" ..`.
 
 Open the `warp-ctc/build/ctc_release.sln` with vs2017, and build the project `ALL_BUILD` (Release x64). Then install the bindings:
 ```cmd
