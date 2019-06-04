@@ -4,7 +4,7 @@
 #include <vector>
 #include <limits>
 #include <numeric>
-
+#include <algorithm>
 
 #include <ctc.h>
 
