@@ -140,11 +140,11 @@ IF (WITH_GPU)
     TARGET_LINK_LIBRARIES(warpctc ${CUDA_curand_LIBRARY})
 
     if(BUILD_TESTS)
-        add_executable(test_cpu tests/test_cpu.cpp )
+        add_executable(test_cpu tests/test_cpu.cpp tests/random.cpp)
         TARGET_LINK_LIBRARIES(test_cpu warpctc)
         SET_TARGET_PROPERTIES(test_cpu PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11")
 
-        cuda_add_executable(test_gpu tests/test_gpu.cu)
+        cuda_add_executable(test_gpu tests/test_gpu.cu tests/random.cpp)
         TARGET_LINK_LIBRARIES(test_gpu warpctc ${CUDA_curand_LIBRARY})
     endif(BUILD_TESTS)
 
