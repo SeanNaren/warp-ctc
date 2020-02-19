@@ -11,10 +11,8 @@ include_directories(include)
 FIND_PACKAGE(CUDA 6.5)
 
 MESSAGE(STATUS "cuda found ${CUDA_FOUND}")
-MESSAGE(STATUS "Torch found ${Torch_DIR}")
 
 option(WITH_GPU     "compile warp-ctc with CUDA."     ${CUDA_FOUND})
-option(WITH_TORCH   "compile warp-ctc with Torch."    ${Torch_FOUND})
 option(WITH_OMP     "compile warp-ctc with OpenMP."   ON)
 option(BUILD_TESTS  "build warp-ctc unit tests."      ON)
 option(BUILD_SHARED "build warp-ctc shared library."  ON)
@@ -139,9 +137,7 @@ IF (WITH_GPU)
         CUDA_ADD_LIBRARY(warpctc ${WARPCTC_SHARED} src/ctc_entrypoint.cu src/reduce.cu)
     endif(WIN32)
 
-    IF (!WITH_TORCH)
-        TARGET_LINK_LIBRARIES(warpctc ${CUDA_curand_LIBRARY})
-    ENDIF()
+    TARGET_LINK_LIBRARIES(warpctc ${CUDA_curand_LIBRARY})
 
     if(BUILD_TESTS)
         add_executable(test_cpu tests/test_cpu.cpp )
