@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 from torch.utils.cpp_extension import BuildExtension, CppExtension
 import torch
 
-extra_compile_args = ['-std=c++11', '-fPIC']
+extra_compile_args = ['-std=c++14', '-fPIC']
 warp_ctc_path = "../build"
 
 if platform.system() == 'Darwin':
@@ -61,5 +61,6 @@ setup(
     license="Apache",
     packages=find_packages(),
     ext_modules=ext_modules,
+    zip_safe=False,
     cmdclass={'build_ext': BuildExtension}
 )
