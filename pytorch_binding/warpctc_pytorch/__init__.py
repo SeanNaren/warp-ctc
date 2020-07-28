@@ -1,6 +1,7 @@
 import torch
 import warpctc_pytorch as warp_ctc
 from torch.autograd import Function
+from torch.cuda.amp import custom_fwd, custom_bwd
 from torch.nn import Module
 
 from ._warp_ctc import *
@@ -14,6 +15,7 @@ def _assert_no_grad(tensor):
 
 class _CTC(Function):
     @staticmethod
+    @custom_fwd(cast_inputs=torch.float32)
     def forward(ctx, acts, labels, act_lens, label_lens, size_average=False,
                 length_average=False, blank=0):
         is_cuda = True if acts.is_cuda else False
@@ -47,6 +49,7 @@ class _CTC(Function):
         return costs
 
     @staticmethod
+    @custom_bwd
     def backward(ctx, grad_output):
         return ctx.grads, None, None, None, None, None, None
 
