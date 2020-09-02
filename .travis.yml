@@ -17,7 +17,7 @@ install:
   - conda info -a
   ## End conda installation
   
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-pep8
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-flakes
   - source activate test-environment
   - conda install pytorch torchvision -c pytorch
   - mkdir build && cd build && cmake .. && make && sudo make install && cd .. && sudo ldconfig
@@ -25,4 +25,4 @@ install:
 
 script:
   - cd pytorch_binding && py.test tests && cd ..
-  - cd pytorch_binding && py.test --pep8 -m pep8 --ignore=warpctc_pytorch/_warp_ctc && cd ..
+  - cd pytorch_binding && py.test --flakes --ignore=warpctc_pytorch/_warp_ctc && cd ..
