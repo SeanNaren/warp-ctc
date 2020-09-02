@@ -3,7 +3,7 @@ import warpctc_pytorch as warp_ctc
 from torch.autograd import Function
 from torch.nn import Module
 
-from ._warp_ctc import *
+from ._warp_ctc import *  # noqa
 
 
 def _assert_no_grad(tensor):
