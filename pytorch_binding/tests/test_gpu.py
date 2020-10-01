@@ -111,5 +111,20 @@ def test_empty_label():
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="requires GPU")
+def test_CTCLoss():
+    probs = torch.FloatTensor([[
+        [0.1, 0.6, 0.1, 0.1, 0.1], [0.1, 0.1, 0.6, 0.1, 0.1]
+    ]]).transpose(0, 1).contiguous().cuda()
+    labels = torch.IntTensor([1, 2])
+    label_sizes = torch.IntTensor([2])
+    probs_sizes = torch.IntTensor([2])
+    probs.requires_grad_(True)
+
+    ctc_loss = warp_ctc.CTCLoss()
+    cost = ctc_loss(probs, labels, probs_sizes, label_sizes)
+    cost.backward()
+
+
 if __name__ == '__main__':
     pytest.main([__file__])

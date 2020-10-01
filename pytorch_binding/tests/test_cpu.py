@@ -69,5 +69,19 @@ def test_empty_label():
     print('CPU_cost: %f' % costs.sum())
 
 
+def test_CTCLoss():
+    probs = torch.FloatTensor([[
+        [0.1, 0.6, 0.1, 0.1, 0.1], [0.1, 0.1, 0.6, 0.1, 0.1]
+    ]]).transpose(0, 1).contiguous()
+    labels = torch.IntTensor([1, 2])
+    label_sizes = torch.IntTensor([2])
+    probs_sizes = torch.IntTensor([2])
+    probs.requires_grad_(True)
+
+    ctc_loss = warp_ctc.CTCLoss()
+    cost = ctc_loss(probs, labels, probs_sizes, label_sizes)
+    cost.backward()
+
+
 if __name__ == '__main__':
     pytest.main([__file__])
