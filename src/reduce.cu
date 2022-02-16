@@ -41,7 +41,11 @@ struct CTAReduce {
 
         T shuff;
         for (int offset = warp_size / 2; offset > 0; offset /= 2) {
+#if defined(__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ >= 9)
             shuff = __shfl_down_sync(0xFFFFFFFF, x, offset);
+#else
+            shuff = __shfl_down(x, offset);
+#endif
             if (tid + offset < count && tid < offset)
                 x = g(x, shuff);
         }
@@ -114,7 +118,7 @@ __global__ void reduce_cols(Iop f, Rop g, const T* input, T* output,
 struct ReduceHelper {
 
     template<typename T, typename Iof, typename Rof>
-    static void impl(Iof f, Rof g, const T* input, T* output, int num_rows, int num_cols, bool axis, cudaStream_t stream) {
+    static void impl(Iof f, Rof g, const T* input, T* output, int num_rows, int num_cols, bool axis, gpuStream_t stream) {
 
         int grid_size;
 
@@ -135,24 +139,39 @@ struct ReduceHelper {
 
 
 template<typename T, typename Iof, typename  Rof>
-ctcStatus_t reduce(Iof f, Rof g, const T* input, T* output, int rows, int cols, bool axis, cudaStream_t stream) {
+ctcStatus_t reduce(Iof f, Rof g, const T* input, T* output, int rows, int cols, bool axis, gpuStream_t stream) {
     ReduceHelper::impl(f, g, input, output, rows, cols, axis, stream);
+
+#ifdef __HIPCC__
+    hipStreamSynchronize(stream);
+    gpuError_t err = hipGetLastError();
+#else
     cudaStreamSynchronize(stream);
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess)
+    gpuError_t err = cudaGetLastError();
+#endif
+
+    if (err != gpuSuccess)
         return CTC_STATUS_EXECUTION_FAILED;
 
     return CTC_STATUS_SUCCESS;
 }
-
-ctcStatus_t reduce_negate(const float *input, float *output, int rows, int cols, bool axis, cudaStream_t stream) {
-    return reduce(ctc_helper::negate<float>(), ctc_helper::add<float>(), input, output, rows, cols, axis, stream);
+template<typename T>
+ctcStatus_t reduce_negate(const T *input, T *output, int rows, int cols, bool axis, gpuStream_t stream) {
+    return reduce(ctc_helper::negate<T>(), ctc_helper::add<T>(), input, output, rows, cols, axis, stream);
 }
+template ctcStatus_t reduce_negate<float>(const float *input, float *output, int rows, int cols, bool axis, gpuStream_t stream);
+template ctcStatus_t reduce_negate<double>(const double *input, double *output, int rows, int cols, bool axis, gpuStream_t stream);
 
-ctcStatus_t reduce_exp(const float *input, float *output, int rows, int cols, bool axis, cudaStream_t stream) {
-    return reduce(ctc_helper::exponential<float>(), ctc_helper::add<float>(), input, output, rows, cols, axis, stream);
+template<typename T>
+ctcStatus_t reduce_exp(const T *input, T *output, int rows, int cols, bool axis, gpuStream_t stream) {
+    return reduce(ctc_helper::exponential<T>(), ctc_helper::add<T>(), input, output, rows, cols, axis, stream);
 }
+template ctcStatus_t reduce_exp<float>(const float *input, float *output, int rows, int cols, bool axis, gpuStream_t stream);
+template ctcStatus_t reduce_exp<double>(const double *input, double *output, int rows, int cols, bool axis, gpuStream_t stream);
 
-ctcStatus_t reduce_max(const float *input, float *output, int rows, int cols, bool axis, cudaStream_t stream) {
-    return reduce(ctc_helper::identity<float>(), ctc_helper::maximum<float>(),input, output, rows, cols, axis, stream);
+template<typename T>
+ctcStatus_t reduce_max(const T *input, T *output, int rows, int cols, bool axis, gpuStream_t stream) {
+    return reduce(ctc_helper::identity<T>(), ctc_helper::maximum<T>(),input, output, rows, cols, axis, stream);
 }
+template ctcStatus_t reduce_max<float>(const float *input, float *output, int rows, int cols, bool axis, gpuStream_t stream);
+template ctcStatus_t reduce_max<double>(const double *input, double *output, int rows, int cols, bool axis, gpuStream_t stream);
