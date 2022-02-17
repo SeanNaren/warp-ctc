@@ -92,15 +92,14 @@ int gpu_ctc(torch::Tensor probs,
                        probs_size, minibatch_size,
                        options, &gpu_size_bytes);
 
-    void* gpu_workspace = THCudaMalloc(state, gpu_size_bytes);
+    auto data_ptr = at::cuda::getCUDADeviceAllocator()->allocate(gpu_size_bytes);
 
     compute_ctc_loss(probs_ptr, grads_ptr,
                      labels_ptr, label_sizes_ptr,
                      sizes_ptr, probs_size,
                      minibatch_size, costs_ptr,
-                     gpu_workspace, options);
+                     data_ptr.get(), options);
 
-    THCudaFree(state, (void *) gpu_workspace);
     return 1;
 }
 #endif
