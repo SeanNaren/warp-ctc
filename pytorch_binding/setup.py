@@ -35,6 +35,8 @@ if enable_gpu:
 
     build_extension = CUDAExtension
     extra_compile_args += ['-DWARPCTC_ENABLE_GPU']
+    if torch.version.hip:
+        extra_compile_args += ['-DWARPCTC_WITH_HIP']
 else:
     build_extension = CppExtension
 
