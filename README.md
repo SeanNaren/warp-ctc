@@ -4,9 +4,13 @@
 
 This is an extension onto the original repo found [here](https://github.com/baidu-research/warp-ctc).
 
+More news:
+
+[2023.07]: compatible with pytorch1.x.
+
 ## Installation
 
-Install [PyTorch](https://github.com/pytorch/pytorch#installation) v0.4.
+Install [PyTorch](https://github.com/pytorch/pytorch#installation) v1.12.
 
 `WARP_CTC_PATH` should be set to the location of a built WarpCTC
 (i.e. `libwarpctc.so`).  This defaults to `../build`, so from within a
