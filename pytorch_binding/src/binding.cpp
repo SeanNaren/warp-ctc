@@ -90,7 +90,7 @@ int gpu_ctc(torch::Tensor probs,
                        probs_size, minibatch_size,
                        options, &gpu_size_bytes);
 
-    void* gpu_workspace = gpu_workspace = c10::cuda::CUDACachingAllocator::raw_alloc(gpu_size_bytes);
+    void* gpu_workspace = c10::cuda::CUDACachingAllocator::raw_alloc(gpu_size_bytes);
 
     compute_ctc_loss(probs_ptr, grads_ptr,
                      labels_ptr, label_sizes_ptr,
